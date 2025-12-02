@@ -1,0 +1,5 @@
+{
+  "name": "Yeast CRISPR Designer 2.0",
+  "description": "A specialized tool for designing CRISPR/Cas9 repair templates and cloning oligos for point mutations in Saccharomyces cerevisiae (Yeast). Features automated PAM disruption logic and Ensembl integration.",
+  "requestFramePermissions": []
+}
