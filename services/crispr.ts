@@ -1,4 +1,3 @@
-
 import { Cas9Site, RepairResult } from '../types';
 import { CODON_TABLE, codonToAA, reverseComplement, translate, generateSimpleAlignment } from './utils';
 
@@ -249,18 +248,63 @@ export function generateRepairTemplates(
   geneSequence: string,
   cas9Sites: Cas9Site[],
   aminoAcidPosition: number,
-  newAminoAcid: string
+  newAminoAcid: string,
+  oligoLength: number = 75
 ): RepairResult[] {
   const results: RepairResult[] = [];
   const mutationPosition = (aminoAcidPosition - 1) * 3;
 
   for (const site of cas9Sites) {
-    const cas9CutPosition = site.position + 17;
     const pamStart = site.position;
 
-    const minFlankingLength = 30;
-    const homologyStart = Math.max(0, Math.min(cas9CutPosition, mutationPosition) - minFlankingLength);
-    const homologyEnd = Math.min(geneSequence.length, Math.max(cas9CutPosition, mutationPosition) + minFlankingLength);
+    // Sliding Window Logic:
+    // We need to find a window of 'oligoLength' that:
+    // 1. Includes the mutation codon (mutationPosition to mutationPosition+2)
+    // 2. Includes the critical PAM/Seed regions for the site (site.position area)
+    // 3. Keeps the mutation as central as possible.
+    
+    // Identify critical region for this site (approximate):
+    // For forward PAM silencing: PAM is at +20/21/22 relative to site start.
+    // For reverse PAM silencing: PAM is at +0/1/2 relative to site start.
+    // We just need to ensure the full site (sequence.length) + mutation is generally coverable.
+    
+    // Determine the absolute range we MUST cover.
+    // Minimally, we need the mutation codon and the PAM sequence to attempt a silent mutation.
+    const pamCriticalStart = site.strand === 'forward' ? site.position + 20 : site.position;
+    const pamCriticalEnd = site.strand === 'forward' ? site.position + 23 : site.position + 3;
+    
+    const requiredStart = Math.min(mutationPosition, pamCriticalStart);
+    const requiredEnd = Math.max(mutationPosition + 3, pamCriticalEnd);
+    
+    const requiredLen = requiredEnd - requiredStart;
+    
+    // If the required distance between mutation and PAM is larger than the oligo, we can't do it.
+    if (requiredLen > oligoLength) continue;
+    
+    // We have "slack" to slide the window.
+    const slack = oligoLength - requiredLen;
+    
+    // Possible start positions for the homology window:
+    // The window must start at or before 'requiredStart'
+    // The window must end at or after 'requiredEnd' -> start <= requiredEnd - oligoLength (impossible if len > oligo)
+    // Actually: start <= requiredStart
+    // AND: start + oligoLength >= requiredEnd -> start >= requiredEnd - oligoLength
+    
+    const minStart = Math.max(0, requiredEnd - oligoLength);
+    const maxStart = Math.min(geneSequence.length - oligoLength, requiredStart);
+    
+    if (minStart > maxStart) continue; // Should be covered by requiredLen check, but safety first.
+    
+    // Determine optimal start to center the mutation
+    // Ideal center is mutationPosition + 1.5
+    // Window center is start + oligoLength / 2
+    // We want start + oligoLength/2 ≈ mutationPosition + 1.5
+    // => start ≈ mutationPosition + 1.5 - oligoLength/2
+    const targetStart = Math.round(mutationPosition + 1.5 - (oligoLength / 2));
+    
+    // Clamp targetStart to our valid range [minStart, maxStart]
+    let homologyStart = Math.max(minStart, Math.min(maxStart, targetStart));
+    let homologyEnd = homologyStart + oligoLength;
 
     const originalHomologyRegion = geneSequence.substring(homologyStart, homologyEnd);
     const homologyList = originalHomologyRegion.split('');

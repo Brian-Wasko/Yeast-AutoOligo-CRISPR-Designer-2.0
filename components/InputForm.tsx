@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 
 interface InputFormProps {
   isLoading: boolean;
-  onSubmit: (gene: string, residue: number, mutation: string) => void;
+  onSubmit: (gene: string, residue: number, mutation: string, oligoLength: number) => void;
 }
 
 export const InputForm: React.FC<InputFormProps> = ({ isLoading, onSubmit }) => {
   const [gene, setGene] = useState('PHO13');
   const [residue, setResidue] = useState<string>('123');
   const [mutation, setMutation] = useState('R');
+  const [oligoLength, setOligoLength] = useState<number>(75);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(gene, parseInt(residue), mutation);
+    onSubmit(gene, parseInt(residue), mutation, oligoLength);
   };
 
   // bg-slate-800 text-white ensures high contrast white text on dark background
@@ -57,6 +58,26 @@ export const InputForm: React.FC<InputFormProps> = ({ isLoading, onSubmit }) => 
             placeholder="e.g., R"
             required
           />
+        </div>
+
+        <div>
+           <div className="flex justify-between mb-1">
+              <label className="block text-sm font-medium text-slate-700">Repair Oligo Length</label>
+              <span className="text-sm font-medium text-indigo-600 font-mono">{oligoLength} nt</span>
+           </div>
+           <input
+             type="range"
+             min="60"
+             max="100"
+             step="1"
+             value={oligoLength}
+             onChange={(e) => setOligoLength(parseInt(e.target.value))}
+             className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+           />
+           <div className="flex justify-between text-xs text-slate-400 mt-1">
+             <span>60 nt</span>
+             <span>100 nt</span>
+           </div>
         </div>
 
         <button
