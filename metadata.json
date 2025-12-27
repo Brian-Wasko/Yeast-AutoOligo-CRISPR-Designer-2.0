@@ -1,5 +1,5 @@
 {
-  "name": "Yeast CRISPR Designer 2.0",
+  "name": "CODY - CRISPR Oligo Designer for Yeast",
   "description": "A specialized tool for designing CRISPR/Cas9 repair templates and cloning oligos for point mutations in Saccharomyces cerevisiae (Yeast). Features automated PAM disruption logic and Ensembl integration.",
   "requestFramePermissions": []
 }

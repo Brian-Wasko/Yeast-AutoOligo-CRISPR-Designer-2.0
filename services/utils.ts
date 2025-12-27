@@ -12,6 +12,19 @@ export const CODON_TABLE: CodonTable = {
   '*': ['TAA', 'TAG', 'TGA'],
 };
 
+// One letter to Three letter map
+export const ONE_TO_THREE: { [key: string]: string } = {
+    'A': 'Ala', 'R': 'Arg', 'N': 'Asn', 'D': 'Asp', 'C': 'Cys',
+    'Q': 'Gln', 'E': 'Glu', 'G': 'Gly', 'H': 'His', 'I': 'Ile',
+    'L': 'Leu', 'K': 'Lys', 'M': 'Met', 'F': 'Phe', 'P': 'Pro',
+    'S': 'Ser', 'T': 'Thr', 'W': 'Trp', 'Y': 'Tyr', 'V': 'Val',
+    '*': 'Ter'
+};
+
+export function toThreeLetterAA(oneLetter: string): string {
+    return ONE_TO_THREE[oneLetter.toUpperCase()] || 'Xaa';
+}
+
 // Invert the map for codon -> AA lookup
 export const AA_LOOKUP: { [codon: string]: string } = {};
 Object.entries(CODON_TABLE).forEach(([aa, codons]) => {
